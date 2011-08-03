@@ -14,6 +14,7 @@ Contributors
 
     Robert Bragg
     Neil Roberts
+    Tapani Pälli
 
 Contacts
 
@@ -66,9 +67,10 @@ Overview
     old buffer for a new frame.
 
     This extension lets you explicitly start a new frame in a way that
-    the driver can report what the contents of the back buffer are.
-    The back buffer can either be reported as invalid or it may be
-    reported to contain the frame from n frames prior to the new frame.
+    the driver can report what age the contents of the back buffer have.
+    The back buffer can either be reported as invalid (has an age of 0)
+    or it may be reported to contain the contents from n frames prior to
+    this new frame.
 
     For many use-cases this extension provides a more efficient
     replacement for using the EGL_PRESERVE EGLconfig option especially
@@ -135,6 +137,15 @@ Additions to Section 3.7 of the EGL 1.4 Specification (Rendering Contexts)
 	to safely rely on the contents of old back-buffers to
 	potentially reduce the amount of redrawing they do each frame.
 
+	If the EGL_BUFFER_PRESERVED swap behaviour is in use then it can
+	be assumed that eglStartFrameINTEL will always report a frame age
+	of 1. It is recommended where possible though that the
+	EGL_BUFFER_PRESERVED swap behaviour not be used though since it can
+	have severe performance consequences. eglStartFrameINTEL can often
+	replace the need for using EGL_BUFFER_PRESERVED without adding
+	a dependency for each frame on the previous frame which is the
+	detail that usually make EGL_BUFFER_PRESERVED in-efficient.
+
 Dependencies on OpenGL ES
 
     None
@@ -145,10 +156,17 @@ Dependencies on OpenVG
 
 Issues
 
-    None
+    What are the semantics if EGL_BUFFER_PRESERVED is in use
+
+    RESOLVED: eglStartFrameINTEL will always return 1 in this case. More
+    clarification about this was added along with the recommendation to
+    use eglStartFrameINTEL instead of EGL_BUFFER_PRESERVED when possible
+    to avoid the in-efficiencies of introducing a dependency for each
+    frame on the previous frame.
 
 Revision History
 
-    Version 1, 25/07/2010
+    Version 1, 25/07/2011
       - First draft
-
+    Version 2, 03/08/2011
+      - Clarified semantics for using EGL_BUFFER_PRESERVED
