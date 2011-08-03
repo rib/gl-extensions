@@ -1,0 +1,121 @@
+EGL_INTEL_swap_buffers_with_damage
+
+    INTEL_swap_buffers_with_damage
+
+Name Strings
+
+    EGL_INTEL_swap_buffers_with_damage
+
+Notice
+
+    Copyright 2011 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Issued
+
+Version
+
+    1 - Jul 29, 2011
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires EGL 1.4
+
+    This extension is written against the wording of the EGL 1.4 
+    Specification.
+
+Overview
+
+    This extension provides a means to issue a swap buffers request
+    to display the contents of the current back buffer and also
+    specify a list of rectangles that define what region has changed
+    since the last swap buffers request.
+
+    In situations where the application is actually performing
+    incremental updates to recycled back buffers so that flipping
+    instead of blitting can be used to present the back buffers then
+    it is desirable to separately track the region where the contents
+    have truly changed in the new frame because compositors will
+    often be able to take advantage of this information to minimize
+    how much of their scene they need to redraw.
+
+New Procedures and Functions
+
+    EGLBoolean eglSwapBuffersWithDamageINTEL (
+	EGLDisplay dpy,
+	EGLSurface surface,
+	EGLint rects,
+	EGLint n_rects);
+
+New Tokens
+
+    None
+
+Additions to Section 3.9 of the EGL 1.4 Specification (Posting the
+Color Buffer)
+
+    Add the following text to the end of subsection 3.9.1 titled
+    "Posting to a Window"
+
+	As an alternative to eglSwapBuffers that can provide extra
+	information to help system compositors optimize how much
+	of a scene they redraw in response to application changes,
+	applications can use:
+
+	EGLBoolean eglSwapBuffersWithDamageINTEL (
+	    EGLDisplay dpy,
+	    EGLSurface surface,
+	    EGLint rects,
+	    EGLint n_rects);
+	
+	which does the same thing as eglSwapBuffers but additionally
+	reports a list of rectangles that defines the region that has
+	truly changed since the last frame. To be clear; the entire
+	contents of the back buffer will still be swapped to the front
+	so applications using this API must still ensure that the
+	entire back buffer is consistent.
+
+	On success, EGL_TRUE is returned. In addition to the arguments
+	passed to eglSwapBuffers, <rects> points to a list of integers
+	in groups of four that each describe a rectangle in screen
+	coordinates in this layout: {x, y, width, height}. The
+	rectangles are specified relative to the top-left of the
+	surface and the x and y components of each rectangle specify
+	the top-left position of that rectangle. <n_rects> determines
+	how many groups of 4 integers can be read from <rects>.
+	    On failure, EGL_FALSE is returned. An EGL_NOT_INITIALIZED
+	error is generated if EGL is not initialized on <dpy>. An
+	EGL_BAD_PARAMETER error is generated if <surface> doesn't
+	refer to a valid EGLSurface. An EGL_BAD_PARAMETER error is
+	generated if <rects> is NULL and <n_rects> is greater than 0.
+
+Dependencies on OpenGL ES
+
+    None
+
+Dependencies on OpenVG
+
+    None
+
+Issues
+
+    None
+
+Revision History
+
+    Version 1, 29/07/2010
+      - First draft
+

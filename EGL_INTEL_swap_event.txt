@@ -1,0 +1,172 @@
+EGL_INTEL_swap_event
+
+    INTEL_swap_event
+
+Name Strings
+
+    EGL_INTEL_swap_event
+
+Notice
+
+    Copyright 2011 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Issued
+
+Version
+
+    1 - Jul 26, 2011
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires EGL 1.4
+
+    This extension is written against the wording of the EGL 1.4 
+    Specification.
+
+Overview
+
+    This extension builds on the EGL_INTEL_native_event_objects
+    extension to provide an event for clients that notifies them when
+    a swap-buffer request has completed.
+
+    This extension provides a means to request for swap-buffer
+    complete events and allows applications to register a callback
+    function which will be automatically called by the EGL driver when
+    it receives the corresponding event from the hardware.
+
+New Types
+    
+    typedef void (*EGLSwapEventCallbackINTEL)(
+	EGLDisplay edpy,
+	EGLSurface surface,
+	EGLTimeKHR complete_timestamp,
+	void *closure_data);
+
+    typedef void (*EGLClosureDestroyCallbackINTEL)(
+	void *closure_data);
+
+New Procedures and Functions
+
+    EGLuint
+    eglSurfaceAddSwapEventCallbackINTEL(
+	EGLDisplay edpy,
+	EGLSurface surface,
+	EGLSwapEventCallbackINTEL callback,
+	void *closure_data,
+	EGLClosureDestroyCallbackINTEL closure_destroy_callback);
+
+    EGLBoolean
+    eglSurfaceRemoveSwapEventCallbackINTEL(
+	EGLDisplay edpy,
+	EGLSurface surface,
+	EGLuint callback_id);
+
+New Tokens
+
+    None
+
+Additions to Chapter 3 of the EGL 1.4 Specification (EGL Functions 
+and Errors)
+
+    Add the following text to a new section 3.10 titled "Event
+    Callbacks"
+
+        Use
+
+	EGLuint
+	eglSurfaceAddSwapEventCallbackINTEL(
+	    EGLDisplay edpy,
+	    EGLSurface surface,
+	    EGLSwapEventCallbackINTEL callback,
+	    void *closure_data,
+	    EGLClosureDestroyCallbackINTEL closure_destroy_callback);
+
+	to register a callback function to be called whenever an
+	eglSwapBuffers request has been serviced. <surface> is the
+	specific surface which an application is interested in
+	receiving swap events for. <callback> is the function which
+	EGL will call when a swap event for <surface> is received.
+	<closure_data> is optional application private data that will
+	be passed as an argument when <callback> is called.
+	<closure_destroy_callback> is an optional function to be
+	called to inform the application that the closure is no longer
+	required.  For example if <surface> is destroyed then
+	<closure_destroy_callback> will be called to allow the
+	application to free the <closure_data> if necessary.
+
+	On success a value > 0 is returned. The value serves as a
+	unique identifier for the registered callback.
+	    On failure 0 will be returned. An EGL_NOT_INITIALIZED
+	error is generated if EGL is not initialized on dpy.
+
+	When there is a swap event ready to be dispatched EGL will
+	call all <callback> functions registered using
+	eglSurfaceAddSwapEventCallbackINTEL. <surface> will be the
+	surface which the event corresponds too. <complete_timestamp>
+	will be a 64bit monotonic time stamp in nanoseconds recorded
+	at the point when the swap was completed. Applications should
+	be able to use this time source to progress animations for
+	example in a way that relates very closely to the current
+	frame rate.  <closure_data> will be the optional application
+	private data registered when calling
+	eglSurfaceAddSwapEventCallbackINTEL.  How this timer is first
+	initialized is undefined.
+
+	If a surface is destroyed then any registered swap event
+	callbacks will be automatically removed and any corresponding
+	EGLClosureDestroyCallbackINTEL callback that was registered
+	will be called so that closure data may be freed.
+
+    Use
+
+    EGLBoolean
+    eglSurfaceRemoveSwapEventCallbackINTEL(
+	EGLDisplay edpy,
+	EGLSurface surface,
+	EGLuint callback_id);
+
+	to remove a swap event callback that was previously registered
+	using eglSurfaceAddSwapEventCallbackINTEL. <surface> is the
+	surface for which the callback was originally registered.
+	<callback_id> is the unique identifier that was returned from
+	eglSurfaceAddSwapEventCallbackINTEL. When a callback is
+	removed then the corresponding <closure_destroy_callback> will
+	be called before eglSurfaceRemoveSwapEventCallback returns.
+
+	On success a EGL_TRUE is returned. On failure EGL_FALSE is
+	returned. An EGL_NOT_INITIALIZED error is generated if EGL is
+	not initialized on dpy. An EGL_BAD_PARAMETER error is
+	generated if <surface> and <callback_id> don't uniquely
+	identify a registered callback.
+
+Dependencies on OpenGL ES
+
+    None
+
+Dependencies on OpenVG
+
+    None
+
+Issues
+
+    None
+
+Revision History
+
+    Version 1, 25/07/2010
+      - First draft
+

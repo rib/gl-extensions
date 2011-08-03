@@ -1,0 +1,313 @@
+Until we find a better place to host this...
+<pre>
+Name
+
+    INTEL_native_event_objects
+
+Name Strings
+
+    EGL_INTEL_native_event_objects
+
+Notice
+
+    Copyright 2010,2011 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+    Neil Roberts
+    Kristian Høgsberg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Issued
+
+Version
+
+    5 - Jul 28, 2011
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires EGL 1.4
+
+    This extension is written against the wording of the EGL 1.4 
+    Specification.
+
+Overview
+    
+    This extension defines some new functions designed to add an event
+    delivery mechanism to EGL built on top of the platform's native
+    event delivery mechanism.
+    
+    On Unix this means being able to get a list of file descriptors
+    from EGL that can be passed to poll(2) to efficiently put the
+    current thread to sleep while waiting for events from the driver.
+    On a platform such as Windows you would get a list of HANDLES for
+    event objects that could be passed to WaitForMultipleObjects() to
+    do much the same thing.
+
+    This extension doesn't define any specific events; it's expected
+    that other extensions will choose to depend on this extension if
+    they need a way to report events to the application.
+
+    Examples of events we'd hope to see become available once this
+    extension is in place are: SwapBuffersComplete events to notify
+    when an asynchronous eglSwapBuffers request has completed and
+    SyncObjectSignaled events to notify when a sync object becomes
+    signaled.
+
+New Procedures and Functions
+
+    EGLBoolean eglPrepareForEventsWaitINTEL(
+              EGLDisplay dpy,
+              EGLNativeEventObjectTypeINTEL *objects,
+              EGLint object_size,
+              EGLint *num_object,
+              EGLint *timeout);
+
+    EGLBoolean eglDispatchEventsINTEL(
+              EGLDisplay dpy);
+
+    EGLBoolean eglForwardEventINTEL(
+              EGLDisplay dpy,
+              EGLNativeEventTypeINTEL native_event);
+
+New Types
+
+    /* A platform dependant typedef used to integrate with native
+     * event source APIs. For example it could represent a file
+     * descriptor on unix or an Event Object on windows.
+     */
+    EGLNativeEventObjectTypeINTEL
+
+    /* A platform dependent typedef used to refer to a single
+     * native event.
+     */
+    EGLNativeEventObjectTypeINTEL
+
+New Tokens
+
+    None
+
+Additions to Chapter 2 of the EGL 1.4 Specification (EGL Operation)
+
+    Add the following text to a new subsection titled "Events"
+    after the "Initialization" subsection:
+
+        There are numerous requests exposed by the rendering APIs
+        supported by EGL that, due to their typical interaction with a
+        separate graphics processor, happen asynchronously with
+        respect to work on the CPU. It is desirable to have a way for
+        drivers to deliver events to applications in a way that takes
+        advantage of native event delivery mechanisms so that the
+        operating system can for instance put the current thread to
+        sleep while it is waiting for events instead of busy-waiting
+        and wasting CPU resources.
+
+        An EGLNativeEventObjectTypeINTEL defines a platform dependent
+        object that can be used with the operating system's native event
+        handling APIs. For example on Unix an
+        EGLNativeEventObjectTypeINTEL would typically be a file descriptor
+        that can be passed to the poll(2) system call to know when
+        there is something to be read from that file. On a platform
+        such as Windows you would get a list of HANDLES for event
+        objects that could be passed to WaitForMultipleObjects() to do
+        much the same thing.
+
+        The processing of events in EGL is done in two stages designed
+        to ease integration with higher level frameworks that may be
+        tracking many different event sources, not just those from
+        EGL.
+
+        1) Prepare
+
+            When the application is idle and preparing to relinquish
+            control to the operating system and wait for events it
+            must query the current list of event objects that need to
+            be passed to the operating system and the maximum time
+            that the thread should be allowed to sleep waiting for
+            events. This gives EGL an opportunity to check if there
+            are in fact already outstanding events to be dispatched
+            before letting the current thread go to sleep.  If there
+            aren't any events to dispatch yet then a list of event
+            objects and a timeout are returned.
+
+        3) Dispatch
+
+            When the application regains control from any native
+            event handling mechanism, perhaps because one of the event
+            objects has had an event delivered to it or the maximum
+            timeout specified in the prepare stage was reached, then
+            EGL should be given control again so it can check each of
+            the event objects for outstanding events and dispatch
+            those back to the application.
+
+Additions to Chapter 3 of the EGL 1.4 Specification (EGL Functions 
+and Errors)
+
+    Add the following text to a new subsection titled "Event Handling"
+    after the "Initialization" subsection:
+        
+        "3.2 Event Handling
+
+        Use
+
+        EGLBoolean eglPrepareForEventsWaitINTEL(
+              EGLDisplay dpy,
+              EGLNativeEventObjectTypeINTEL *objects,
+              EGLint object_size,
+              EGLint *num_object,
+              EGLint *timeout);
+
+        to notify EGL that the application is idle and preparing to
+        relinquish control to the operating system to put the current
+        thread to sleep until an event is available. This will get the
+        current list of native event objects for the given display.
+        <objects> is a pointer to a buffer containing <object_size>
+        elements. On success, EGL_TRUE is returned. The number of
+        objects is returned in <num_object>, and elements 0 through
+        <num_object> - 1 of the objects are filled in with the native
+        event objects. No more than <object_size>
+        EGLNativeEventObjects will be returned even if more are
+        available on the specified display. However if
+        eglGetNativeEventObjectsINTEL is called with <objects> = NULL
+        then no objects are returned, but the total number of objects
+        available will be returned in <num_object>. If EGL knows there
+        are already events ready for dispatch it can return 0 objects
+        and set <timeout> = 0. <timeout> is a maximum time-out in
+	milliseconds to wait before control should be returned back to
+	EGL. A <timeout> value of -1 means it is ok to wait
+	indefinitely for an event to become available.
+            On failure EGL_FALSE will be returned. An
+        EGL_NOT_INITIALIZED error is generated if EGL is not
+        initialized on dpy. An EGL_BAD_PARAMETER error is generated if
+        <num_object> is NULL.
+
+            Use
+
+        EGLBoolean eglDispatchEventsINTEL(
+              EGLDisplay dpy);
+
+        when the application has regained control after
+        being put to sleep by the operating system to wait for events.
+        EGL will check if any of the event objects now have events
+        ready to be dispatched and if so it will dispatch them to the
+	application before returning. Applications can assume that
+	events are only ever dispatched when they explicitly call this
+	function. This rule helps ensure that applications can control
+	what locks they hold when dispatching occurs to avoid
+	deadlocks during dispatch. On success, EGL_TRUE is returned.
+            On failure EGL_FALSE will be returned. An
+        EGL_NOT_INITIALIZED error is generated if EGL is not
+        initialized on dpy.
+
+	    Use
+
+        EGLBoolean eglForwardEventINTEL(
+              EGLDisplay dpy,
+	      EGLNativeEventTypeINTEL event);
+
+	to forward EGL events that it is not otherwise capable of
+	retrieving through an event object. It is platform dependent
+	how applications may be required to use this API but for
+	example some X11 based EGL platforms do not conceptually own
+	the X file descriptor and so they are not able to directly
+	read events from it. Applications using EGL with X11 may be
+	required to forward certain X11 events to EGL using this API.
+	  EGL will check the event but will never immediately dispatch
+	the event back to the application; dispatching of events only
+	happens when the user calls eglDispatchEventsINTEL. On
+	success, EGL_TRUE is returned.
+            On failure EGL_FALSE will be returned. An
+        EGL_NOT_INITIALIZED error is generated if EGL is not
+        initialized on dpy. Depending on the platform
+	EGL_BAD_PARAMETER is generated if the event is not valid.
+	
+Dependencies on OpenGL ES
+
+    None
+
+Dependencies on OpenVG
+
+    None
+
+Issues
+
+    1) How will we able to dynamically change the list of event
+    objects in response to applications using APIs that affect
+    the events the application wants to receive?
+
+     RESOLVED: Instead of just querying the list of event objects once
+     while initializing EGL as was originally specified, an
+     application now gets the current list of objects each time
+     eglPrepareForEventsWaitINTEL is called just before relinquishing
+     control to the operating system to put the current thread to
+     sleep.
+
+    2) Instead of if making EGL responsible for dispatching events to
+    callbacks defined by other extensions would it be better to
+    instead define a base EGLEvent type and API to check and get
+    events that the application can instead dispatch?
+
+     So for example after regaining control from the operating system
+     after a sleep the application would call eglEventPending(dpy,
+     &status); and if <status> showed there was an event available it
+     would call eglGetNextEvent(dpy, &event); followed by
+     eglFreeEvent(event); when it has been processed.
+
+    3) How can this work with X11 based EGL platforms that don't
+    conceptually own the X connection file descriptor and so they
+    can't directly read events from it?
+
+      RESOLVED: eglForwardEventINTEL was added to allow EGL platforms
+      to handle events coming from external sources owned by the
+      application.
+
+    4) How can applications be sure to avoid re-entrancy and deadlock
+    issues using extension. If further extensions allow registering of
+    callback functions to be called by EGL for specific events then
+    applications need some assurances about when those callbacks will
+    be called so they can make sure no locks are held that might be
+    required by the callbacks resulting in a deadlock.
+
+      RESOLVED: eglDispatchEventsINTEL is guaranteed to be the only
+      function that will ever result in events being dispatched back
+      to the application and so applications can make sure they drop
+      all necessary locks before calling this function. Typically
+      applications would call this just after coming out of idle where
+      you would expect almost no locks to be held by the application.
+
+Revision History
+
+    Version 1, 15/06/2010
+      - First draft
+    Version 2, 15/06/2010
+      - Simplify the spec by reducing it down to just two new
+        functions and resolve an issue over handling dynamic changes
+        to the list of native event objects.
+    Version 3, 16/06/2010
+      - Add an INTEL suffix to the EGLNativeEventObject type and open
+        an issue questioning if it would be better to have a way to
+        explicitly check for pending events and get events for
+        dispatch by the application.
+    Version 4, 14/04/2011
+      - Add eglForwardEventINTEL to cater for X11 based EGL platforms
+        that may need to handle external events that the application
+	must retrieve.
+    Version 5, 28/07/2011
+      - Clarify that eglDispatchEventsINTEL is the only function that
+        may result in events being dispatched to the application so as
+	to avoid potential deadlocks that could occur if the
+	application wasn't able to ensure that necessary locks were
+	dropped before any registered callbacks were called during
+	dispatching.
+</pre>
+
