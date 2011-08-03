@@ -13,6 +13,7 @@ Notice
 Contributors
 
     Robert Bragg
+    Tapani Pälli
 
 Contacts
 
@@ -95,7 +96,8 @@ Color Buffer)
 	rectangles are specified relative to the top-left of the
 	surface and the x and y components of each rectangle specify
 	the top-left position of that rectangle. <n_rects> determines
-	how many groups of 4 integers can be read from <rects>.
+	how many groups of 4 integers can be read from <rects>.  It is
+	not necessary to avoid overlaps of the specified rectangles.
 	    On failure, EGL_FALSE is returned. An EGL_NOT_INITIALIZED
 	error is generated if EGL is not initialized on <dpy>. An
 	EGL_BAD_PARAMETER error is generated if <surface> doesn't
@@ -112,10 +114,15 @@ Dependencies on OpenVG
 
 Issues
 
-    None
+    Do applications have to make sure the rectangles don't overlap?
+
+    RESOLVED: No, that would be inconvenient for applications and we
+    see no difficulty for implementations to supporting overlapping
+    rectangles.
 
 Revision History
 
-    Version 1, 29/07/2010
+    Version 1, 29/07/2011
       - First draft
-
+    Version 2, 03/08/2011
+      - Clarify that the rectangles passed may overlap
