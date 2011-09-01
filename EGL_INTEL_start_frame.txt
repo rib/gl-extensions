@@ -172,5 +172,5 @@ Revision History
       - First draft
     Version 2, 03/08/2011
       - Clarified semantics for using EGL_BUFFER_PRESERVED
-    Version 3, 01/11/2011
+    Version 3, 01/09/2011
       - Fixed a prototype inconsistency

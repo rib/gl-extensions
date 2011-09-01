@@ -14,6 +14,7 @@ Contributors
 
     Robert Bragg
     Tapani Pälli
+    Kristian Høgsberg
 
 Contacts
 
@@ -25,7 +26,7 @@ Status
 
 Version
 
-    1 - Jul 29, 2011
+    3 - Sept 1, 2011
 
 Number
 
@@ -58,7 +59,7 @@ New Procedures and Functions
     EGLBoolean eglSwapBuffersWithDamageINTEL (
 	EGLDisplay dpy,
 	EGLSurface surface,
-	EGLint rects,
+	EGLint *rects,
 	EGLint n_rects);
 
 New Tokens
@@ -79,7 +80,7 @@ Color Buffer)
 	EGLBoolean eglSwapBuffersWithDamageINTEL (
 	    EGLDisplay dpy,
 	    EGLSurface surface,
-	    EGLint rects,
+	    EGLint *rects,
 	    EGLint n_rects);
 	
 	which does the same thing as eglSwapBuffers but additionally
@@ -126,3 +127,5 @@ Revision History
       - First draft
     Version 2, 03/08/2011
       - Clarify that the rectangles passed may overlap
+    Version 3, 01/09/2011
+      - Fix a missing '*' in prototype to make rects a pointer
