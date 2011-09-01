@@ -15,6 +15,7 @@ Contributors
     Robert Bragg
     Neil Roberts
     Tapani Pälli
+    Kristian Høgsberg
 
 Contacts
 
@@ -26,7 +27,7 @@ Status
 
 Version
 
-    1 - Jul 25, 2011
+    3 - Sept 1, 2011
 
 Number
 
@@ -85,6 +86,7 @@ New Procedures and Functions
 
     EGLBoolean eglStartFrameINTEL(
 		    EGLDisplay dpy,
+		    EGLSurface surface,
 		    EGLuint *frame_age);
 
 New Tokens
@@ -170,3 +172,5 @@ Revision History
       - First draft
     Version 2, 03/08/2011
       - Clarified semantics for using EGL_BUFFER_PRESERVED
+    Version 3, 01/11/2011
+      - Fixed a prototype inconsistency
