@@ -1,0 +1,170 @@
+EGL_INTEL_buffer_age
+
+    INTEL_buffer_age
+
+Name Strings
+
+    EGL_INTEL_buffer_age
+
+Notice
+
+    Copyright 2011 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+    Neil Roberts
+    Tapani Pälli
+    Kristian Høgsberg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Draft
+
+Version
+
+    4 - Nov 3, 2011
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires EGL 1.4
+
+    This extension is written against the wording of the EGL 1.4 
+    Specification.
+
+    This extension refers to the EGL_INTEL_start_frame extension
+
+Overview
+
+    The aim of this extension is to expose enough information to
+    applications about how the driver manages the set of front and
+    back buffers associated with a given surface to allow applications
+    to re-use the contents of old frames and minimize how much must be
+    redrawn for the next frame.
+
+    There are lots of different ways for a driver to manage these
+    buffers, from double buffering, different styles of triple
+    buffering and even n-buffering or simply single buffer rendering.
+    We also need to consider that power management events or memory
+    pressure events might also result in some of the buffers not
+    currently in-use being freed.
+   
+    This extension lets you query the age of the back buffer contents
+    for an EGL surface as the number of frames elapsed since the
+    contents were originally defined. The back buffer can either be
+    reported as invalid (has an age of 0) or it may be reported to
+    contain the contents from n frames prior to this new frame.
+
+    For many use-cases this extension can provide an efficient
+    alternative to using the EGL_BUFFER_PRESERVED swap behaviour. The
+    EGL_BUFFER_PRESERVED swap behaviour adds a direct dependency for
+    any frame n on frame n - 1 which can affect the pipelining of
+    multiple frames but also implies a costly copy-back of data to
+    initialize the back-buffer at the start of each frame.
+
+    For example if you consider a double buffered application drawing
+    a small spinning icon, but everything else in the scene is static.
+    If we know that 2 buffers are continusouly being recycled each
+    time eglSwapBuffers is called then even though 100s of frames may
+    need to be drawn to animate the icon it can be seen that the two
+    buffers are remaining unchanged except within the bounds of the
+    icon. In this scenario ideally the application would simply
+    perform an incremental update of the old buffer instead of
+    redundantly redrawing all the static parts of the scene. The
+    problem up until now though has been that EGL doesn't report how
+    buffers may be recycled so it wasn't safe for applications to try
+    and reuse their contents. Now applications can keep track of all
+    the regions that have changed over the last n frames and by
+    knowing the age of the buffer they know how to efficiently repair
+    buffers that are re-cycled instead of redrawing the entire scene.
+
+New Procedures and Functions
+
+    None
+
+New Tokens
+
+    EGL_BUFFER_AGE_INTEL    TBD
+
+Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
+
+    Add the following to the table of "Queryable surface attributes
+    and types":
+
+      +----------------------+---------+-----------------------------+
+      | Attribute            | Type    | Description                 |
+      +----------------------+---------+-----------------------------+
+      | EGL_BUFFER_AGE_INTEL | Integer | Age of back-buffer contents |
+      +----------------------+---------+-----------------------------+
+        Table aaa: Queryable surface attributes and types.
+
+
+    Add the following text to the subsection titled "Surface
+    Attributes" in the description for eglQuerySurface
+
+	    Querying EGL_BUFFER_AGE_INTEL returns the age of the
+	color contents of the current back-buffer as the number of
+	frames elapsed since it was defined. For example with a single
+	buffered surface the age would usually be 1. With a double
+	buffered surface the age would usually be 2. An age of 0 means
+	that the contents have only just been initialized and the
+	contents are undefined.
+	    Since this attribute depends on the progression of frames
+	and for it to really be useful it should be queried at the
+	start of a frame before rendering anything, applications
+	should usually call eglStartFrameEGL() to explicitly start a
+	new frame before querying the back-buffer age.
+	    If the EGL driver decides to free un-used back-buffers
+	when the system is under memory pressure or in response to
+	power-management events then EGL will return an age of 0 when
+	it allocates a new buffer at the start of a new frame.
+	    Applications can use this age to safely rely on the
+	contents of old back-buffers to potentially reduce the amount
+	of redrawing they do each frame.
+	    If the EGL_BUFFER_PRESERVED swap behaviour is in use then
+	it can be assumed that the age will always be 1. It is
+	recommended where possible though that the
+	EGL_BUFFER_PRESERVED swap behaviour not be used since it can
+	have severe performance consequences. Keeping track of the
+	buffer age instead and the regions that have changed over the
+	last 2 or 3 frames can often replace the need for using
+	EGL_BUFFER_PRESERVED without adding a dependency for each
+	frame on the previous frame which what usually make
+	EGL_BUFFER_PRESERVED in-efficient.
+
+Dependencies on OpenGL ES
+
+    None
+
+Dependencies on OpenVG
+
+    None
+
+Issues
+
+    What are the semantics if EGL_BUFFER_PRESERVED is in use
+
+    RESOLVED: The age will always be 1 in this case. More
+    clarification about this was added along with the recommendation
+    to use the buffer age to reuse buffers instead of
+    EGL_BUFFER_PRESERVED when possible to avoid the in-efficiencies of
+    introducing a dependency for each frame on the previous frame.
+
+Revision History
+
+    Version 1, 25/07/2011
+      - First draft
+    Version 2, 03/08/2011
+      - Clarified semantics for using EGL_BUFFER_PRESERVED
+    Version 3, 01/09/2011
+      - Fixed a prototype inconsistency
+    Version 3, 03/11/2011
+      - Split out the buffer age parts from EGL_INTEL_start_frame

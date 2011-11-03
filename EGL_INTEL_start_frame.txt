@@ -23,11 +23,11 @@ Contacts
 
 Status
 
-    Issued
+    Draft
 
 Version
 
-    3 - Sept 1, 2011
+    4 - Nov 3, 2011
 
 Number
 
@@ -42,52 +42,25 @@ Dependencies
 
 Overview
 
-    The aim of this extension is to expose enough information to
-    applications about how the driver manages the set of front and
-    back buffers associated with a given framebuffer to allow
-    applications to re-use the contents of old frames and minimize
-    how much must be updated for the latest frame.
+    The aim of this extension is to allow applications to explicitly
+    start new frames without using any client drawing commands. This
+    allows applications to ensure that all required ancillary buffers
+    for a new frame are in place and allows them to query surface
+    attributes that may be affected by the start of a new frame.
 
-    There are lots of different ways for a driver to manage these
-    buffers, from double buffering, different styles of triple
-    buffering and even n-buffering or simply single buffer rendering.
-    We also need to consider that power management events or memory
-    pressure events might also result in some of the buffers not
-    currently in-use being freed.
-   
-    For example if you consider a double buffered application with a
-    small spinning icon in a toolbar, but everything else is static
-    then there may be 100s of frames drawn to animate the icon but
-    they all only need to update the area covering the icon if its
-    known that back-buffers are being recycled. In this case we expect
-    that at the start of each frame the current buffer contains the
-    result of rendering from two frames ago; that means the
-    application can keep track of all the regions that have changed
-    over the last 2 frames and by unioning that region with the region
-    of the icon it would know what needs to be redrawn to repair that
-    old buffer for a new frame.
-
-    This extension lets you explicitly start a new frame in a way that
-    the driver can report what age the contents of the back buffer have.
-    The back buffer can either be reported as invalid (has an age of 0)
-    or it may be reported to contain the contents from n frames prior to
-    this new frame.
-
-    For many use-cases this extension provides a more efficient
-    replacement for using the EGL_PRESERVE EGLconfig option especially
-    when considering deferred rendering hardware. EGL_PRESERVE
-    adds a direct dependency for any frame n on frame n - 1, but
-    it may also stop the driver from being able to pipeline multiple
-    frames and imply a costly copy-back of data by effectively mapping
-    the n - 1 framebuffer as a large textured quad used to bootstrap
-    frame n.
+    Attributes of a surface that might change at the start of a new
+    frame could include the width and height for example. The
+    designers of this extension also envisage having another extension
+    making it possible to query the age of the back-buffer's contents
+    so applications can efficiently re-use old buffer contents.  In
+    this case it would be important to avoid using any client API
+    drawing commands until the age is known.
 
 New Procedures and Functions
 
     EGLBoolean eglStartFrameINTEL(
 		    EGLDisplay dpy,
-		    EGLSurface surface,
-		    EGLuint *frame_age);
+		    EGLSurface surface);
 
 New Tokens
 
@@ -102,51 +75,33 @@ Additions to Section 3.7 of the EGL 1.4 Specification (Rendering Contexts)
 	start a frame, since all client APIs can start a new frame
 	implicitly. (For example glClear can be used to start a frame
 	with OpenGL.) If EGL is used to start a new frame though
-	applications can get important information about the initial
-	contents of the back color buffer so that applications may be
-	able to avoid redrawing the full contents of the buffer.
+	applications get an opportunity to be able to query surface
+	attributes before deciding how to draw any contents for the
+	frame.
+	
 	Applications can use
 
 	EGLBoolean eglStartFrameINTEL(
 		    EGLDisplay dpy,
-		    EGLSurface surface,
-		    EGLuint *frame_age);
+		    EGLSurface surface);
 
-	to optionally notify EGL that they are starting a new frame to
-	ensure that there is a back-buffer ready for rendering too and
-	to determine the integrity of that back-buffer as an age
-	measured in frames elapsed.
+	to optionally notify EGL that they are starting a new frame
+	ensuring that there is a back-buffer ready for rendering too
+	and updating any attributes that would be affected by the
+	start of a new frame. The frame is started with respect to the
+	currently bound client api which can be queried using
+	eglQueryAPI().
+
+	Examples of attributes that could change at the start of a new
+	frame are EGL_SURFACE_WIDTH and EGL_SURFACE_HEIGHT.
 
 	On success, EGL_TRUE is returned. <surface> identifies the
-	surface to be rendered too. <frame_age> is used to return to
-	the caller the age of the current back-buffer's contents
-	according to how many frames have elapsed since it was last
-	used. For example with a single buffered drawable the age
-	would usually be 1. With a double buffered drawable the age
-	would usually be 2. A <frame_age> of 0 means that the contents
-	of the back buffer are undefined.
+	surface to be rendered too.
 	    On failure, EGL_FALSE will be returned. An
 	EGL_NOT_INITIALIZED error is generated if EGL is not
-	initialized on dpy. An EGL_BAD_PARAMETER error is generated if
-	<surface> doesn't refer to a valid EGLSurface or if
-	<frame_age> is NULL.
-
-	If the EGL driver decides to free un-used back-buffers when
-	the system is under memory pressure or in response to
-	power-management events then EGL will simply return a
-	<frame_age> of 0 when it allocates a new buffer at the start
-	of a new frame. This means that applications can use this API
-	to safely rely on the contents of old back-buffers to
-	potentially reduce the amount of redrawing they do each frame.
-
-	If the EGL_BUFFER_PRESERVED swap behaviour is in use then it can
-	be assumed that eglStartFrameINTEL will always report a frame age
-	of 1. It is recommended where possible though that the
-	EGL_BUFFER_PRESERVED swap behaviour not be used though since it can
-	have severe performance consequences. eglStartFrameINTEL can often
-	replace the need for using EGL_BUFFER_PRESERVED without adding
-	a dependency for each frame on the previous frame which is the
-	detail that usually make EGL_BUFFER_PRESERVED in-efficient.
+	initialized on dpy or if eglQueryAPI() would return EGL_NONE. An
+	EGL_BAD_PARAMETER error is generated if <surface> doesn't refer to
+	a valid EGLSurface.
 
 Dependencies on OpenGL ES
 
@@ -158,13 +113,7 @@ Dependencies on OpenVG
 
 Issues
 
-    What are the semantics if EGL_BUFFER_PRESERVED is in use
-
-    RESOLVED: eglStartFrameINTEL will always return 1 in this case. More
-    clarification about this was added along with the recommendation to
-    use eglStartFrameINTEL instead of EGL_BUFFER_PRESERVED when possible
-    to avoid the in-efficiencies of introducing a dependency for each
-    frame on the previous frame.
+    None
 
 Revision History
 
@@ -174,3 +123,5 @@ Revision History
       - Clarified semantics for using EGL_BUFFER_PRESERVED
     Version 3, 01/09/2011
       - Fixed a prototype inconsistency
+    Version 4, 03/11/2011
+      - Split out buffer age parts into separate extension
