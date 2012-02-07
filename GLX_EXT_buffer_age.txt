@@ -1,0 +1,125 @@
+GLX_EXT_buffer_age
+
+    EXT_buffer_age
+
+Name Strings
+
+    GLX_EXT_buffer_age
+
+Notice
+
+    Copyright 2011 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+    Neil Roberts
+    Tapani Pälli
+    Kristian Høgsberg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Draft
+
+Version
+
+    1 - Jan 7, 2012
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires GLX 1.4
+
+    This extension is written against the wording of the GLX 1.4 
+    Specification.
+
+    This extension refers to the GLX_EXT_start_frame extension
+
+Overview
+
+    The aim of this extension is to expose enough information to
+    applications about how the driver manages the set of front and
+    back buffers associated with a given surface to allow applications
+    to re-use the contents of old frames and minimize how much must be
+    redrawn for the next frame.
+
+    There are lots of different ways for a driver to manage these
+    buffers, from double buffering, different styles of triple
+    buffering and even n-buffering or simply single buffer rendering.
+    We also need to consider that power management events or memory
+    pressure events might also result in some of the buffers not
+    currently in-use being freed.
+   
+    This extension lets you query the age of the back buffer contents
+    for an GLX surface as the number of frames elapsed since the
+    contents were originally defined. The back buffer can either be
+    reported as invalid (has an age of 0) or it may be reported to
+    contain the contents from n frames prior to this new frame.
+
+    For example if you consider a double buffered application drawing
+    a small spinning icon, but everything else in the scene is static.
+    If we know that 2 buffers are continuously being recycled each
+    time glXSwapBuffers is called then even though 100s of frames may
+    need to be drawn to animate the icon it can be seen that the two
+    buffers are remaining unchanged except within the bounds of the
+    icon. In this scenario ideally the application would simply
+    perform an incremental update of the old buffer instead of
+    redundantly redrawing all the static parts of the scene. The
+    problem up until now though has been that GLX doesn't report how
+    buffers may be recycled so it wasn't safe for applications to try
+    and reuse their contents. Now applications can keep track of all
+    the regions that have changed over the last n frames and by
+    knowing the age of the buffer they know how to efficiently repair
+    buffers that are re-cycled instead of redrawing the entire scene.
+
+New Procedures and Functions
+
+    None
+
+New Tokens
+
+    GLX_BUFFER_AGE_EXT    TBD
+
+Additions to Section 3.3.6 of the GLX 1.4 Specification (Querying Attributes)
+
+    Add the following text to the description for glXQueryDrawable
+
+	    Querying GLX_BUFFER_AGE_EXT returns the age of the
+	color contents of the current back-buffer as the number of
+	frames elapsed since it was defined. For example with a single
+	buffered surface the age would usually be 1. With a double
+	buffered surface the age would usually be 2. An age of 0 means
+	that the contents have only just been initialized and the
+	contents are undefined.
+	    Since this attribute depends on the progression of frames
+	and for it to really be useful it should be queried at the
+	start of a frame before rendering anything, applications
+	should usually call glXStartFrameEXT() to explicitly start a
+	new frame before querying the back-buffer age.
+	    If the GLX driver decides to free un-used back-buffers
+	when the system is under memory pressure or in response to
+	power-management events then GLX will return an age of 0 when
+	it allocates a new buffer at the start of a new frame.
+	    Applications can use this age to safely rely on the
+	contents of old back-buffers to potentially reduce the amount
+	of redrawing they do each frame.
+
+Dependencies on OpenGL
+
+    None
+
+Issues
+
+    None
+
+Revision History
+
+    Version 1, 07/02/2012
+      - First draft

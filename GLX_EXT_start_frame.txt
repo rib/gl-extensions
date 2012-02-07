@@ -1,0 +1,112 @@
+GLX_EXT_start_frame
+
+    EXT_start_frame
+
+Name Strings
+
+    GLX_EXT_start_frame
+
+Notice
+
+    Copyright 2012 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+    Neil Roberts
+    Tapani Pälli
+    Kristian Høgsberg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Draft
+
+Version
+
+    1 - Feb 7, 2012
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires GLX 1.4
+
+    This extension is written against the wording of the GLX 1.4 
+    Specification.
+
+Overview
+
+    The aim of this extension is to allow applications to explicitly
+    start new frames without using any client drawing commands. This
+    allows applications to ensure that all required ancillary buffers
+    for a new frame are in place and allows them to query surface
+    attributes that may be affected by the start of a new frame.
+
+    Attributes of a surface that might change at the start of a new
+    frame could include the width and height for example. The
+    designers of this extension also envisage having another extension
+    making it possible to query the age of the back-buffer's contents
+    so applications can efficiently re-use old buffer contents.  In
+    this case it would be important to avoid using any client API
+    drawing commands until the age is known.
+
+New Procedures and Functions
+
+    Bool glXStartFrameEXT(
+		    Display *dpy,
+		    GLXDrawable draw);
+
+New Tokens
+
+    None
+
+Additions to Section 3.3 of the GLX 1.4 Specification (Functions)
+
+    Add the following text to a new subsection titled "Starting a new
+    frame"
+
+	It is not required that the GLX API be used to explicitly
+	start a frame, since the OpenGL api can start a new frame
+	implicitly. (For example glClear can be used to start a
+	frame.) If GLX is used to start a new frame though
+	applications get an opportunity to be able to query surface
+	attributes before deciding how to draw any contents for the
+	frame.
+	
+	Applications can use
+
+	Bool glXStartFrameEXT(
+		    Display *dpy,
+		    GLXDrawable draw);
+
+	to optionally notify GLX that they are starting a new frame
+	ensuring that there is a back-buffer ready for rendering too
+	and updating any attributes that would be affected by the
+	start of a new frame.
+
+	Examples of attributes that could change at the start of a new
+	frame are GLX_WIDTH and GLX_HEIGHT.
+
+	On success, True is returned. <draw> identifies the
+	drawable to be rendered too.
+	    On failure, False will be returned. A
+	GLXBadDrawable error is generated if <draw> doesn't refer to
+	a valid drawable.
+
+Dependencies on OpenGL
+
+    None
+
+Issues
+
+    None
+
+Revision History
+
+    Version 1, 07/02/2012
