@@ -1,0 +1,278 @@
+Name
+
+    EXT_unix_poll
+
+Name Strings
+
+    EGL_EXT_unix_poll
+
+Notice
+
+    Copyright 2012 Intel Cooperation. All rights reserved.
+
+Contributors
+
+    Robert Bragg
+
+Contacts
+
+    Robert Bragg, Intel (robert.bragg 'at' intel.com)
+
+Status
+
+    Draft
+
+Version
+
+    1 - Feb 8, 2012
+
+Number
+
+    TBD
+
+Dependencies
+
+    Requires EGL 1.4
+
+    This extension is written against the wording of the EGL 1.4 
+    Specification.
+
+Overview
+    
+    This extension defines some new functions designed to add an event
+    delivery mechanism to EGL based on the unix poll(2) syscall.
+    
+    This means being able to get a list of file descriptors and event
+    masks from EGL that can be passed to poll(2) to efficiently put
+    the current thread to sleep while waiting for events from the
+    driver.
+
+    This extension doesn't define any specific events; it's expected
+    that other extensions will choose to depend on this extension if
+    they need a way to report events to the application.
+
+    Examples of events we'd hope to see become available once this
+    extension is in place are: SwapBuffersComplete events to notify
+    when an asynchronous eglSwapBuffers request has completed and
+    SyncObjectSignaled events to notify when a sync object becomes
+    signaled.
+
+New Procedures and Functions
+
+    EGLBoolean eglGetUnixPollInfoEXT(
+              EGLDisplay dpy,
+	      struct pollfd *fds,
+	      EGLint fds_size,
+	      EGLint *nfds,
+              EGLint *timeout);
+
+    EGLBoolean eglDispatchEventsEXT(
+              EGLDisplay dpy,
+	      const struct pollfd *fds,
+	      int nfds);
+
+    EGLBoolean eglForwardEventEXT(
+              EGLDisplay dpy,
+              EGLNativeEventTypeEXT native_event);
+
+New Types
+
+    /* A platform dependent typedef used to refer to a single
+     * native event. For example this could be an XEvent for
+     * X11 and Xlib based platforms.
+     */
+    EGLNativeEventObjectTypeEXT
+
+New Tokens
+
+    None
+
+Additions to Chapter 2 of the EGL 1.4 Specification (EGL Operation)
+
+    Add the following text to a new subsection titled "Events"
+    after the "Initialization" subsection:
+
+        There are numerous requests exposed by the rendering APIs
+        supported by EGL that, due to their typical interaction with a
+        separate graphics processor, happen asynchronously with
+        respect to work on the CPU. It is desirable to have a way for
+        drivers to deliver events to applications in a way that takes
+        advantage of native event delivery mechanisms so that the
+        operating system can for instance put the current thread to
+        sleep while it is waiting for events instead of busy-waiting
+        and wasting CPU resources.
+
+        The processing of events in EGL is done in three stages designed
+        to ease integration with higher level frameworks that may be
+        tracking many different event sources, not just those from
+        EGL.
+
+        1) Check For Events
+
+            When the application is idle and preparing to relinquish
+            control to the operating system and wait for events it
+            should first check if there are any events ready to handle.
+
+	    If there are events ready to handle then the application
+	    should skip the second step and go on to dispatch those
+	    events.
+
+	    If there are no events ready then as part of the check
+	    stage the application will get the required information
+	    from EGL to enable it to wait for events in step 2.
+
+	2) Wait for Events
+
+	    If there are no events ready then if the application has
+	    nothing else to do it can block via some operating system
+	    mechanism until events are ready.
+
+        3) Dispatch
+
+	    When the application regains control from any native event
+	    handling mechanism, either because an event was delivered
+	    to it or a maximum timeout specified in the check stage
+	    was reached, then EGL should be given control again so it
+	    can check again for outstanding events and dispatch those
+	    back to the application.
+
+	    Any EGL APIs that allow the registration of a callback
+	    function to be called on the asynchronous completion of
+	    some task or other event will only ever invoke those
+	    callbacks during this dispatch stage. This allows
+	    applications to drop any locks that might need to be taken
+	    by callbacks so as to avoid dead locks.
+
+	Each operating system will have its own specialised apis for
+	checking and waiting until events are ready and these are
+	described in Chapter 3 (EGL Functions and Errors)
+
+Additions to Chapter 3 of the EGL 1.4 Specification (EGL Functions 
+and Errors)
+
+    Add the following text to a new subsection titled "Event Handling"
+    after the "Initialization" subsection:
+        
+        "3.2 Event Handling
+
+        Use
+
+	EGLBoolean eglGetUnixPollInfoEXT(
+		  EGLDisplay dpy,
+		  struct pollfd *fds,
+		  EGLint fds_size,
+		  EGLint *num_fds,
+		  EGLint *timeout);
+
+	on unix based operating systems to get the current list of
+	file descriptors and corresponding event masks that the driver
+	is interested in. <fds> is a pointer to a buffer containing
+	<fds_size> <struct pollfd> elements. On success, EGL_TRUE is
+	returned. The number of <struct pollfd>s is returned in
+	<num_fds>, and elements 0 through <num_fds> - 1 of <fds> are
+	filled in with valid <struct pollfd>s that can be passed to
+	the unix poll(2) syscall. No more than <fds_size> elements
+	will be returned even if more are available on the specified
+	display. However, if eglGetUnixPollInfoEXT is called with
+	<fds> = NULL, then no <struct pollfd>s are returned, but the
+	total number of fds available will be returned in <num_fds>.
+	A maximum timeout measured in milliseconds for how long the
+	operating system should wait for events before calling back
+	into eglDispatchEventsEXT() is returned in <timeout>. If
+	there are already events ready and the application should
+	immediately call eglDispatchEventsEXT() then 0 will be
+	returned in <timeout>.
+	    On failure, EGL_FALSE is returned. An EGL_NOT_INITIALIZED
+	error is generated if EGL is not initialized on dpy. An
+	EGL_BAD_PARAMETER error is generated if <num_fds> or <timeout>
+	are NULL.
+
+            Use
+
+	EGLBoolean eglDispatchEventsEXT(
+		  EGLDisplay dpy,
+		  const struct pollfd *fds,
+		  int num_fds);
+
+	when the application has regained control after being put to
+	sleep by the operating system to wait for events.  EGL will
+	check if any of the file descriptors have events ready to be
+	dispatched and if so it will dispatch them to the application
+	before returning. Applications can assume that events are only
+	ever dispatched when they explicitly call this function. This
+	rule helps ensure that applications can control what locks
+	they hold when dispatching occurs to avoid deadlocks during
+	dispatch. On success, EGL_TRUE is returned.
+            On failure EGL_FALSE will be returned. An
+	EGL_NOT_INITIALIZED error is generated if EGL is not
+	initialized on dpy. An EGL_BAD_PARAMETER error is generated if
+	<fds> is NULL.
+
+	    Use
+
+        EGLBoolean eglForwardEventEXT(
+              EGLDisplay dpy,
+	      EGLNativeEventTypeEXT event);
+
+	to forward EGL events that it is not otherwise capable of
+	retrieving through a file descriptor. It is platform dependent
+	how applications may be required to use this API but for
+	example some X11 based EGL platforms do not conceptually own
+	the X file descriptor and so they are not able to directly
+	read events from it. Applications using EGL with X11 may be
+	required to forward certain X11 events to EGL using this API.
+	  EGL will check the event but will never immediately dispatch
+	the event back to the application; dispatching of events only
+	happens when the user calls eglDispatchEventsEXT. On
+	success, EGL_TRUE is returned.
+            On failure EGL_FALSE will be returned. An
+        EGL_NOT_INITIALIZED error is generated if EGL is not
+        initialized on dpy. Depending on the platform
+	EGL_BAD_PARAMETER is generated if the event is not valid.
+	
+Dependencies on OpenGL ES
+
+    None
+
+Dependencies on OpenVG
+
+    None
+
+Issues
+
+    1) Instead of making EGL responsible for dispatching events to
+    callbacks defined by other extensions would it be better to
+    instead define a base EGLEvent type and API to check and get
+    events that the application can instead dispatch?
+
+     So for example after regaining control from the operating system
+     after a sleep the application would call eglEventPending(dpy,
+     &status); and if <status> showed there was an event available it
+     would call eglGetNextEvent(dpy, &event); followed by
+     eglFreeEvent(event); when it has been processed.
+
+    2) How can this work with X11 based EGL platforms that don't
+    conceptually own the X connection file descriptor and so they
+    can't directly read events from it?
+
+      RESOLVED: eglForwardEventEXT was added to allow EGL platforms
+      to handle events coming from external sources owned by the
+      application.
+
+    3) How can applications be sure to avoid re-entrancy and deadlock
+    issues using this extension. If further extensions allow
+    registering of callback functions to be called by EGL for specific
+    events then applications need some assurances about when those
+    callbacks will be called so they can make sure no locks are held
+    that might be required by the callbacks resulting in a deadlock.
+
+      RESOLVED: eglDispatchEventsEXT is guaranteed to be the only
+      function that will ever result in events being dispatched back
+      to the application and so applications can make sure they drop
+      all necessary locks before calling this function. Typically
+      applications would call this just after coming out of idle where
+      you would expect almost no locks to be held by the application.
+
+Revision History
+
+    Version 1, 08/02/2012
