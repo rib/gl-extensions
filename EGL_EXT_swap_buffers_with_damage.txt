@@ -26,7 +26,7 @@ Status
 
 Version
 
-    3 - Sept 1, 2011
+    4 - Feb 11, 2012
 
 Number
 
@@ -41,18 +41,15 @@ Dependencies
 
 Overview
 
-    This extension provides a means to issue a swap buffers request
-    to display the contents of the current back buffer and also
-    specify a list of rectangles that define what region has changed
-    since the last swap buffers request.
+    This extension provides a means to issue a swap buffers request to
+    display the contents of the current back buffer and also specify a
+    list of damage rectangles that can be passed to a system
+    compositor so it can minimize how it has to recompose.
 
-    In situations where the application is actually performing
-    incremental updates to recycled back buffers so that flipping
-    instead of blitting can be used to present the back buffers then
-    it is desirable to separately track the region where the contents
-    have truly changed in the new frame because compositors will
-    often be able to take advantage of this information to minimize
-    how much of their scene they need to redraw.
+    This should be used in situations where an application is only
+    animating a small portion of a surface since it enables the
+    compositor to avoid wasting time recomposing parts of the surface
+    that haven't changed.
 
 New Procedures and Functions
 
@@ -72,10 +69,7 @@ Color Buffer)
     Add the following text to the end of subsection 3.9.1 titled
     "Posting to a Window"
 
-	As an alternative to eglSwapBuffers that can provide extra
-	information to help system compositors optimize how much
-	of a scene they redraw in response to application changes,
-	applications can use:
+	As an alternative to eglSwapBuffers use:
 
 	EGLBoolean eglSwapBuffersWithDamageEXT (
 	    EGLDisplay dpy,
@@ -83,12 +77,14 @@ Color Buffer)
 	    EGLint *rects,
 	    EGLint n_rects);
 	
-	which does the same thing as eglSwapBuffers but additionally
-	reports a list of rectangles that defines the region that has
-	truly changed since the last frame. To be clear; the entire
-	contents of the back buffer will still be swapped to the front
-	so applications using this API must still ensure that the
-	entire back buffer is consistent.
+	to do the same thing as eglSwapBuffers but additionally report
+	a list of rectangles that defines the region that has truly
+	changed since the last frame. To be clear; the entire contents
+	of the back buffer will still be swapped to the front so
+	applications using this API must still ensure that the entire
+	back buffer is consistent. The rectangles are only a hint for
+	the system compositor so it can avoid recomposing parts of the
+	surface that haven't really changed.
 
 	On success, EGL_TRUE is returned. In addition to the arguments
 	passed to eglSwapBuffers, <rects> points to a list of integers
@@ -129,3 +125,5 @@ Revision History
       - Clarify that the rectangles passed may overlap
     Version 3, 01/09/2011
       - Fix a missing '*' in prototype to make rects a pointer
+    Version 4, 11/02/2012
+      - Clarify that implementing in terms of eglSwapBuffers is valid
