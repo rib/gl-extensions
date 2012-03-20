@@ -1,10 +1,10 @@
-EGL_INTEL_buffer_age
+EGL_EXT_buffer_age
 
-    INTEL_buffer_age
+    EXT_buffer_age
 
 Name Strings
 
-    EGL_INTEL_buffer_age
+    EGL_EXT_buffer_age
 
 Notice
 
@@ -40,7 +40,7 @@ Dependencies
     This extension is written against the wording of the EGL 1.4 
     Specification.
 
-    This extension refers to the EGL_INTEL_start_frame extension
+    This extension refers to the EGL_EXT_start_frame extension
 
 Overview
 
@@ -63,6 +63,9 @@ Overview
     reported as invalid (has an age of 0) or it may be reported to
     contain the contents from n frames prior to this new frame.
 
+    Once the age has been queried then it can be assumed to remain
+    unchanged until the end of that frame.
+
     For many use-cases this extension can provide an efficient
     alternative to using the EGL_BUFFER_PRESERVED swap behaviour. The
     EGL_BUFFER_PRESERVED swap behaviour adds a direct dependency for
@@ -72,7 +75,7 @@ Overview
 
     For example if you consider a double buffered application drawing
     a small spinning icon, but everything else in the scene is static.
-    If we know that 2 buffers are continusouly being recycled each
+    If we know that 2 buffers are continuously being recycled each
     time eglSwapBuffers is called then even though 100s of frames may
     need to be drawn to animate the icon it can be seen that the two
     buffers are remaining unchanged except within the bounds of the
@@ -92,7 +95,7 @@ New Procedures and Functions
 
 New Tokens
 
-    EGL_BUFFER_AGE_INTEL    TBD
+    EGL_BUFFER_AGE_EXT    TBD
 
 Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
 
@@ -102,7 +105,7 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
       +----------------------+---------+-----------------------------+
       | Attribute            | Type    | Description                 |
       +----------------------+---------+-----------------------------+
-      | EGL_BUFFER_AGE_INTEL | Integer | Age of back-buffer contents |
+      | EGL_BUFFER_AGE_EXT   | Integer | Age of back-buffer contents |
       +----------------------+---------+-----------------------------+
         Table aaa: Queryable surface attributes and types.
 
@@ -110,7 +113,7 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
     Add the following text to the subsection titled "Surface
     Attributes" in the description for eglQuerySurface
 
-	    Querying EGL_BUFFER_AGE_INTEL returns the age of the
+	    Querying EGL_BUFFER_AGE_EXT returns the age of the
 	color contents of the current back-buffer as the number of
 	frames elapsed since it was defined. For example with a single
 	buffered surface the age would usually be 1. With a double
