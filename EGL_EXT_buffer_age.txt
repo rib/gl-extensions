@@ -27,7 +27,7 @@ Status
 
 Version
 
-    5 - Mar 20, 2012
+    6 - Mar 20, 2012
 
 Number
 
@@ -121,6 +121,10 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
 	    Once EGL_BUFFER_AGE_EXT has been queried then it can be
 	assumed that the age will remain valid until the end of the
 	frame such as when eglSwapBuffers is next called.
+	    If the returned age is greater than zero then it can be
+	assumed that when the buffer contents were created then every
+	pixel was owned by the current context and would have passed
+	the pixel ownership test.
 	    If the EGL driver decides to free un-used back-buffers
 	when the system is under memory pressure or in response to
 	power-management events then EGL will return an age of 0 when
@@ -157,6 +161,24 @@ Issues
     EGL_BUFFER_PRESERVED when possible to avoid the in-efficiencies of
     introducing a dependency for each frame on the previous frame.
 
+    How can an application know that all pixels of a re-usable buffer
+    were originally owned by the current context?
+
+       RESOLVED: the driver must discount any buffer when it is not
+       fully owned by the context drawing to it. (If any pixel would
+       fail the pixel ownership test.)
+
+       Some drivers may share the back buffer between different
+       contexts and so it's possible with overlapping windows that
+       some regions of the back buffer aren't owned by the current
+       context (they fail the pixel ownership test) which could make
+       it difficult for applications to re-use such a buffer later if
+       it doesn't know exactly what regions belong to it.
+
+       An alternative to discounting partially owned buffers is that
+       we add a way to query the region of owned pixels, but we chose
+       to keep the solution simple to ease implementation.
+
 Revision History
 
     Version 1, 25/07/2011
@@ -171,3 +193,6 @@ Revision History
       - Document that once the age is queried it remains valid until
         the end of the frame so we can remove the need for a separate
 	EGL_EXT_start_frame extension.
+    Version 6, 20/03/2012
+      - Clarify that only buffers who's contents were fully owned by
+        the context are tracked.
