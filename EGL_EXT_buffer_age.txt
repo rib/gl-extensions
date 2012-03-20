@@ -27,7 +27,7 @@ Status
 
 Version
 
-    6 - Mar 20, 2012
+    7 - Mar 20, 2012
 
 Number
 
@@ -143,6 +143,14 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
 	frame on the previous frame which is what usually make
 	EGL_BUFFER_PRESERVED in-efficient.
 
+    Add the following text to last paragraph of the subsection titled
+    "Surface Attributes" in the description for eglQuerySurface
+    errors.
+	
+	If querying EGL_BUFFER_AGE_EXT and <surface> is not bound as
+	the draw surface to the calling threads current context
+	an EGL_BAD_SURFACE error is generated.
+
 Dependencies on OpenGL ES
 
     None
@@ -155,11 +163,12 @@ Issues
 
     What are the semantics if EGL_BUFFER_PRESERVED is in use
 
-    RESOLVED: The age will always be 1 in this case. More
-    clarification about this was added along with the recommendation
-    to use the buffer age to reuse buffers instead of
-    EGL_BUFFER_PRESERVED when possible to avoid the in-efficiencies of
-    introducing a dependency for each frame on the previous frame.
+       RESOLVED: The age will always be 1 in this case. More
+       clarification about this was added along with the
+       recommendation to use the buffer age to reuse buffers instead
+       of EGL_BUFFER_PRESERVED when possible to avoid the
+       in-efficiencies of introducing a dependency for each frame on
+       the previous frame.
 
     How can an application know that all pixels of a re-usable buffer
     were originally owned by the current context?
@@ -179,6 +188,13 @@ Issues
        we add a way to query the region of owned pixels, but we chose
        to keep the solution simple to ease implementation.
 
+    What are the semantics if the buffer age attribute is queried for
+    a surface that isn't bound to the calling thread's context as the
+    draw surface?
+       
+       RESOLVED: we report an EGL_BAD_SURFACE error as is similarly
+       done when calling eglSwapBuffers for such a surface.
+
 Revision History
 
     Version 1, 25/07/2011
@@ -196,3 +212,6 @@ Revision History
     Version 6, 20/03/2012
       - Clarify that only buffers who's contents were fully owned by
         the context are tracked.
+    Version 7, 20/03/2012
+      - Document that an error will be generated if querying the age
+        for a surface not bound to the current context.
