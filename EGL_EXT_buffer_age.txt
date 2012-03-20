@@ -8,7 +8,7 @@ Name Strings
 
 Notice
 
-    Copyright 2011 Intel Cooperation. All rights reserved.
+    Copyright 2011,2012 Intel Cooperation. All rights reserved.
 
 Contributors
 
@@ -27,7 +27,7 @@ Status
 
 Version
 
-    4 - Nov 3, 2011
+    5 - Mar 20, 2012
 
 Number
 
@@ -39,8 +39,6 @@ Dependencies
 
     This extension is written against the wording of the EGL 1.4 
     Specification.
-
-    This extension refers to the EGL_EXT_start_frame extension
 
 Overview
 
@@ -120,11 +118,9 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
 	buffered surface the age would usually be 2. An age of 0 means
 	that the contents have only just been initialized and the
 	contents are undefined.
-	    Since this attribute depends on the progression of frames
-	and for it to really be useful it should be queried at the
-	start of a frame before rendering anything, applications
-	should usually call eglStartFrameEGL() to explicitly start a
-	new frame before querying the back-buffer age.
+	    Once EGL_BUFFER_AGE_EXT has been queried then it can be
+	assumed that the age will remain valid until the end of the
+	frame such as when eglSwapBuffers is next called.
 	    If the EGL driver decides to free un-used back-buffers
 	when the system is under memory pressure or in response to
 	power-management events then EGL will return an age of 0 when
@@ -140,7 +136,7 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
 	buffer age instead and the regions that have changed over the
 	last 2 or 3 frames can often replace the need for using
 	EGL_BUFFER_PRESERVED without adding a dependency for each
-	frame on the previous frame which what usually make
+	frame on the previous frame which is what usually make
 	EGL_BUFFER_PRESERVED in-efficient.
 
 Dependencies on OpenGL ES
@@ -169,5 +165,9 @@ Revision History
       - Clarified semantics for using EGL_BUFFER_PRESERVED
     Version 3, 01/09/2011
       - Fixed a prototype inconsistency
-    Version 3, 03/11/2011
+    Version 4, 03/11/2011
       - Split out the buffer age parts from EGL_INTEL_start_frame
+    Version 5, 20/03/2012
+      - Document that once the age is queried it remains valid until
+        the end of the frame so we can remove the need for a separate
+	EGL_EXT_start_frame extension.
