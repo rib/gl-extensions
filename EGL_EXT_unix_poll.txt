@@ -81,7 +81,7 @@ New Types
      * native event. For example this could be an XEvent for
      * X11 and Xlib based platforms.
      */
-    EGLNativeEventObjectTypeEXT
+    EGLNativeEventTypeEXT
 
 New Tokens
 
