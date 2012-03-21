@@ -27,7 +27,7 @@ Status
 
 Version
 
-    3 - Feb 8, 2012
+    4 - Mar 21, 2012
 
 Number
 
@@ -114,6 +114,13 @@ Additions to Section 3.3.6 of the GLX 1.4 Specification (Querying Attributes)
 	contents of old back-buffers to potentially reduce the amount
 	of redrawing they do each frame.
 
+    Add the following text to the last paragraph of the description for
+    glXQueryDrawable describing error conditions.
+       
+       If querying GLX_BUFFER_AGE_EXT and <draw> is not bound to the
+       calling threads current context a GLXBadDrawable error is
+       generated.
+
 Dependencies on OpenGL
 
     None
@@ -138,6 +145,11 @@ Issues
 	we add a way to query the region of owned pixels, but we chose
 	to keep the solution simple to easy implementation.
 
+    What are the semantics if the buffer age attribute is queried for
+    a drawable that isn't bound to the calling thread's context?
+       
+	RESOLVED: we report an GLXBadDrawable error.
+
 Revision History
 
     Version 1, 07/02/2012
@@ -148,4 +160,7 @@ Revision History
     Version 3, 08/03/2012
       - Clarify that only buffers who's contents were fully owned by
         the context are tracked.
+    Version 4 21/03/2012
+      - Document that an error will be generated if querying the age
+        for a drawable not bound to the current context.
 
