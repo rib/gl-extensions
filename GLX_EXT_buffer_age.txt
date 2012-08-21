@@ -54,15 +54,13 @@ Overview
     We also need to consider that power management events or memory
     pressure events might also result in some of the buffers not
     currently in-use being freed.
-   
-    This extension lets you query the age of the back buffer contents
-    for an GLX surface as the number of frames elapsed since the
-    contents were originally defined. The back buffer can either be
-    reported as invalid (has an age of 0) or it may be reported to
-    contain the contents from n frames prior to this new frame.
 
-    Once the age has been queried then it can be assumed to remain
-    unchanged until the end of that frame.
+    This extension lets applications query the age of the back buffer
+    contents for a GLX surface as the number of frames elapsed since
+    the contents were most recently defined. The back buffer can
+    either be reported as invalid (has an age of 0) or it may be
+    reported to contain the contents from n frames prior to the
+    current frame.
 
     For example if you consider a double buffered application drawing
     a small spinning icon, but everything else in the scene is static.
