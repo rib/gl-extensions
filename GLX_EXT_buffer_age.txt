@@ -90,34 +90,38 @@ Additions to Section 3.3.6 of the GLX 1.4 Specification (Querying Attributes)
 
     Add the following text to the description for glXQueryDrawable
 
-	    Querying GLX_BUFFER_AGE_EXT returns the age of the
-	color contents of the current back-buffer as the number of
-	frames elapsed since it was defined. For example with a single
-	buffered surface the age would usually be 1. With a double
-	buffered surface the age would usually be 2. An age of 0 means
-	that the contents have only just been initialized and the
-	contents are undefined.
-	    Once GLX_BUFFER_AGE_EXT has been queried then it can be
-	assumed that the age will remain valid until the end of the
-	frame such as when glXSwapBuffers is next called.
-	    If the returned age is greater than zero then it can be
-	assumed that when the buffer contents were created then every
-	pixel was owned by the current context and would have passed
-	the pixel ownership test.
-	    If the GLX driver decides to free un-used back-buffers
-	when the system is under memory pressure or in response to
-	power-management events then GLX will return an age of 0 when
-	it allocates a new buffer at the start of a new frame.
-	    Applications can use this age to safely rely on the
-	contents of old back-buffers to potentially reduce the amount
-	of redrawing they do each frame.
+        Querying GLX_BUFFER_AGE_EXT returns the age of the
+        color contents of the current back-buffer as the number of
+        frames elapsed since it was defined. For example with a single
+        buffered surface the age would usually be 1. With a double
+        buffered surface the age would usually be 2. An age of 0 means
+        that the contents have only just been initialized and the
+        contents are undefined.
+
+        Once GLX_BUFFER_AGE_EXT has been queried then it can be
+        assumed that the age will remain valid until the end of the
+        frame such as when glXSwapBuffers is next called.
+
+        If the returned age is greater than zero then it can be
+        assumed that when the buffer contents were created then every
+        pixel was owned by the current context and would have passed
+        the pixel ownership test.
+
+        If the GLX driver decides to free un-used back-buffers
+        when the system is under memory pressure or in response to
+        power-management events then GLX will return an age of 0 when
+        it allocates a new buffer at the start of a new frame.
+
+        Applications can use this age to safely rely on the
+        contents of old back-buffers to potentially reduce the amount
+        of redrawing they do each frame.
 
     Add the following text to the last paragraph of the description for
     glXQueryDrawable describing error conditions.
-       
-       If querying GLX_BUFFER_AGE_EXT and <draw> is not bound to the
-       calling threads current context a GLXBadDrawable error is
-       generated.
+
+        If querying GLX_BUFFER_AGE_EXT and <draw> is not bound to the
+        calling threads current context a GLXBadDrawable error is
+        generated.
 
 Dependencies on OpenGL
 
@@ -128,25 +132,25 @@ Issues
     How can an application know that all pixels of a re-usable buffer
     were originally owned by the current context?
 
-	RESOLVED: the driver must discount any buffer when it is not
-	fully owned by the context drawing to it. (If any pixel would
-	fail the pixel ownership test.)
+        RESOLVED: the driver must discount any buffer when it is not
+        fully owned by the context drawing to it. (If any pixel would
+        fail the pixel ownership test.)
 
-	Some drivers may share the back buffer between different
-	contexts and so it's possible with overlapping windows that
-	some regions of the back buffer aren't owned by the current
-	context (they fail the pixel ownership test) which could make
-	it difficult for applications to re-use such a buffer later if
-	it doesn't know exactly what regions belong to it.
+        Some drivers may share the back buffer between different
+        contexts and so it's possible with overlapping windows that
+        some regions of the back buffer aren't owned by the current
+        context (they fail the pixel ownership test) which could make
+        it difficult for applications to re-use such a buffer later if
+        it doesn't know exactly what regions belong to it.
 
-	An alternative to discounting partially owned buffers is that
-	we add a way to query the region of owned pixels, but we chose
-	to keep the solution simple to easy implementation.
+        An alternative to discounting partially owned buffers is that
+        we add a way to query the region of owned pixels, but we chose
+        to keep the solution simple to easy implementation.
 
     What are the semantics if the buffer age attribute is queried for
     a drawable that isn't bound to the calling thread's context?
-       
-	RESOLVED: we report an GLXBadDrawable error.
+
+        RESOLVED: we report an GLXBadDrawable error.
 
 Revision History
 
@@ -154,7 +158,7 @@ Revision History
       - First draft
     Version 2, 08/03/2012
       - Document that once the age is queried it remains valid until
-	the end of the frame.
+        the end of the frame.
     Version 3, 08/03/2012
       - Clarify that only buffers who's contents were fully owned by
         the context are tracked.
