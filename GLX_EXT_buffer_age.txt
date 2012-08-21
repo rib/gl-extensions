@@ -16,6 +16,7 @@ Contributors
     Neil Roberts
     Tapani Pälli
     Kristian Høgsberg
+    James Jones
 
 Contacts
 
@@ -27,7 +28,7 @@ Status
 
 Version
 
-    4 - Mar 21, 2012
+    5 - Aug 21, 2012
 
 Number
 
@@ -109,11 +110,12 @@ Additions to Section 3.3.6 of the GLX 1.4 Specification (Querying Attributes)
 
         Table 3.X, Frame Boundary Functions
 
+        Buffers' ages are initialized to 0 at buffer creation time.
         When a frame boundary is reached, the following occurs before
         any exchanging or copying of color buffers:
 
             * The current back buffer's age is set to 1.
-            * Any other color buffers' ages are incremented by one if
+            * Any other color buffers' ages are incremented by 1 if
               their age was previously greater than 0.
 
         For the purposes of buffer age tracking, a buffer's content
@@ -129,15 +131,15 @@ Additions to Section 3.3.6 of the GLX 1.4 Specification (Querying Attributes)
         buffered drawables have no frame boundaries and therefore
         always have an age of 0.
 
-        Frame boundaries are the only events that can increment a
-        buffer's age.  However, a buffer's age may be reset to zero
-        due to external events.  Once GLX_BUFFER_AGE_EXT has been
-        queried then it can be assumed that the age will remain valid
-        until the next frame boundary unless the pixel ownership test
-        changes for any pixels within the drawable, or if new pixels
-        are added to or removed from the drawable, i.e., the drawable
-        is resized. GLX implementations are permitted, but not
-        required, to reset the buffer age in these cases.
+        Frame boundaries are the only events that can set a buffer's
+        age to a positive value. However, a buffer's age may be reset
+        to 0 due to external events. Once GLX_BUFFER_AGE_EXT has been
+        queried then it can be assumed that the age will remain
+        valid until the next frame boundary unless the pixel ownership
+        test changes for any pixels within the drawable, or if new
+        pixels are added to or removed from the drawable, i.e., the
+        drawable is resized. GLX implementations are permitted, but
+        not required, to reset the buffer age in these cases.
 
         The buffer age is valid only for those pixels that
         continuously passed the pixel ownership test between when
@@ -178,32 +180,42 @@ Dependencies on OpenGL
 Dependencies on GLX_OML_sync_control
 
     If GLX_OML_sync_control is not supported, glXSwapBuffersMscOML is
-removed
+    removed from Table 3.X.
 
 Issues
 
-    How can an application know that all pixels of a re-usable buffer
-    were originally owned by the current context?
+    1) How can an application know that all pixels of a re-usable
+       buffer were originally owned by the current context?
 
-        RESOLVED: the driver must discount any buffer when it is not
-        fully owned by the context drawing to it. (If any pixel would
-        fail the pixel ownership test.)
+        RESOLVED: It is up to the application to track pixel
+        ownership using existing X11 events, such as expose or
+        configure notify events.
 
-        Some drivers may share the back buffer between different
-        contexts and so it's possible with overlapping windows that
-        some regions of the back buffer aren't owned by the current
-        context (they fail the pixel ownership test) which could make
-        it difficult for applications to re-use such a buffer later if
-        it doesn't know exactly what regions belong to it.
-
-        An alternative to discounting partially owned buffers is that
-        we add a way to query the region of owned pixels, but we chose
-        to keep the solution simple to easy implementation.
-
-    What are the semantics if the buffer age attribute is queried for
-    a drawable that isn't bound to the calling thread's context?
+    2) What are the semantics if the buffer age attribute is queried
+       for a drawable that isn't bound to the calling thread's
+       context?
 
         RESOLVED: we report an GLXBadDrawable error.
+
+    3) Is the buffer age tracked in the GLX client or the GLX server?
+
+        RESOLVED: Querying the buffer age needs to be a fast
+        operation, so it makes sense to track it in the GLX client. 
+        However, GLX implementations without support for direct
+        rendering likely won't have any per-drawable client state. 
+        Therefore, the buffer age is tracked in the same address space
+        as the current GL server context.  For direct rendering, this
+        is the GLX client. For indirect rendering, it is the GLX
+        server.  The buffer age is not synchronized between the two
+        when changing contexts.
+
+    4) What is the buffer age of a single buffered drawable?
+
+        RESOLVED: 0.  This falls out implicitly from the buffer age
+        calculations, which dictate that a buffer's age starts at 0,
+        and is only incremented by frame boundaries.  Since frame
+        boundary functions do not affect single buffered drawables,
+        their age will always be 0.
 
 Revision History
 
@@ -218,4 +230,9 @@ Revision History
     Version 4 21/03/2012
       - Document that an error will be generated if querying the age
         for a drawable not bound to the current context.
+    Version 5 21/08/2012
+      - Relax pixel ownership requirements
+      - Slightly tweak and explicitly document buffer age calculation
+      - Note that buffer age is tracked in the GLX client when using
+        direct rendering.
 
