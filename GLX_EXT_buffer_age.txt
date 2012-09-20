@@ -14,8 +14,6 @@ Contributors
 
     Robert Bragg
     Neil Roberts
-    Tapani Pälli
-    Kristian Høgsberg
     James Jones
 
 Contacts
