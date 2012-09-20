@@ -28,7 +28,7 @@ Status
 
 Version
 
-    7 - Sept 17, 2012
+    8 - Sept 20, 2012
 
 Number
 
@@ -112,16 +112,6 @@ Additions to Section 3.3.6 of the GLX 1.4 Specification (Querying Attributes)
         glXSwapBuffersMscOML
 
         Table 3.X, Frame Boundary Functions
-
-        The age of a buffer can be more precisely defined as the
-        minimum age of all the pixels that make up the buffer.
-        Therefore, when pixels are added to, or removed from the
-        buffer, the buffer's age may change as a result even though
-        the age of any pixels unaffected by the change remains the
-        same.  While only the buffer's overall age can be queried
-        directly, useful assumptions can be made regarding the age of
-        groups of pixels within a buffer.  These assumptions are
-        described below.
 
         Buffers' ages are initialized to 0 at buffer creation time.
         When a frame boundary is reached, the following occurs before
@@ -266,3 +256,5 @@ Revision History
       - Further clarify pixel age vs. buffer age
       - Rename GLX_BUFFER_AGE_EXT to GLX_BACK_BUFFER_AGE_EXT
       - Assign value to GLX_BACK_BUFFER_AGE_EXT
+    Version 8 20/09/2012
+      - Remove overly precise definition of buffer age
