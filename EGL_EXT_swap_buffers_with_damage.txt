@@ -15,6 +15,7 @@ Contributors
     Robert Bragg
     Tapani Pälli
     Kristian Høgsberg
+    Benjamin Franzke
 
 Contacts
 
@@ -22,11 +23,11 @@ Contacts
 
 Status
 
-    Issued
+    Draft
 
 Version
 
-    4 - Feb 11, 2012
+    5 - Feb 11, 2012
 
 Number
 
@@ -36,7 +37,7 @@ Dependencies
 
     Requires EGL 1.4
 
-    This extension is written against the wording of the EGL 1.4 
+    This extension is written against the wording of the EGL 1.4
     Specification.
 
 Overview
@@ -76,7 +77,7 @@ Color Buffer)
 	    EGLSurface surface,
 	    EGLint *rects,
 	    EGLint n_rects);
-	
+
 	to do the same thing as eglSwapBuffers but additionally report
 	a list of rectangles that defines the region that has truly
 	changed since the last frame. To be clear; the entire contents
@@ -85,21 +86,17 @@ Color Buffer)
 	back buffer is consistent. The rectangles are only a hint for
 	the system compositor so it can avoid recomposing parts of the
 	surface that haven't really changed.
-
-	On success, EGL_TRUE is returned. In addition to the arguments
-	passed to eglSwapBuffers, <rects> points to a list of integers
-	in groups of four that each describe a rectangle in screen
-	coordinates in this layout: {x, y, width, height}. The
-	rectangles are specified relative to the top-left of the
-	surface and the x and y components of each rectangle specify
-	the top-left position of that rectangle. <n_rects> determines
-	how many groups of 4 integers can be read from <rects>.  It is
-	not necessary to avoid overlaps of the specified rectangles.
-	    On failure, EGL_FALSE is returned. An EGL_NOT_INITIALIZED
-	error is generated if EGL is not initialized on <dpy>. An
-	EGL_BAD_PARAMETER error is generated if <surface> doesn't
-	refer to a valid EGLSurface. An EGL_BAD_PARAMETER error is
-	generated if <rects> is NULL and <n_rects> is greater than 0.
+	    <rects> points to a list of integers in groups of four that
+	each describe a rectangle in screen coordinates in this
+	layout: {x, y, width, height}. The rectangles are specified
+	relative to the top-left of the surface and the x and y
+	components of each rectangle specify the top-left position of
+	that rectangle. <n_rects> determines how many groups of 4
+	integers can be read from <rects>.  It is not necessary to
+	avoid overlaps of the specified rectangles.
+	    In addition to the error conditions checked for by the
+	eglSwapBuffers api an EGL_BAD_PARAMETER error is generated if
+	<rects> is NULL or <n_rects> is less than or equal to 0.
 
 Dependencies on OpenGL ES
 
@@ -111,11 +108,23 @@ Dependencies on OpenVG
 
 Issues
 
-    Do applications have to make sure the rectangles don't overlap?
+1)  Do applications have to make sure the rectangles don't overlap?
 
     RESOLVED: No, that would be inconvenient for applications and we
     see no difficulty for implementations to supporting overlapping
     rectangles.
+
+2)  Would it be valid for an implementation to discard the list of
+    rectangles internally and work just in terms of the
+    eglSwapBuffers api?
+
+    RESOLVED: Yes, the rectangles are only there for optimization
+    purposes so although it wouldn't be beneficial to applications if
+    it was convenient at times then it would be compliant for an
+    implementation to discard the rectangles and just call
+    eglSwapBuffers instead. The error conditions that should be
+    checked for are compatible with the requirements for
+    eglSwapBuffers.
 
 Revision History
 
@@ -125,5 +134,8 @@ Revision History
       - Clarify that the rectangles passed may overlap
     Version 3, 01/09/2011
       - Fix a missing '*' in prototype to make rects a pointer
-    Version 4, 11/02/2012
-      - Clarify that implementing in terms of eglSwapBuffers is valid
+    Version 4, 11,02,2012
+      - Clarify that implementing in terms of eglSwapBuffers would be
+	compliant.
+    Version 5, 11,02,2012
+      - Tweak the cases where we report BAD_PARAMETER errors
