@@ -226,9 +226,8 @@ Issues
         pixel ownership test must remain valid until the next frame
         boundary otherwise applications can't be absolutely sure of
         the consistency of their rendered content.  Implementations
-        may reset the age of the queryable age of the buffer when
-        pixel ownership changes occur.  This is further clarified in
-        the paragraph after table 3.x.
+        may reset the queryable age of the buffer when pixel ownership
+        changes occur.  This is further clarified in section 3.3.6
 
 Revision History
 
