@@ -97,6 +97,37 @@ New Tokens
 
     EGL_BUFFER_AGE_EXT    TBD
 
+Additions to Section 2.2 of the EGL 1.4 Specification (Rendering
+Contexts and drawing surfaces)
+
+    Add the following text to a new subsection titled "Pixel
+    Ownership Test" after the subsection titled "Interaction With
+    Native Rendering":
+
+            A fragment produced by a client api through rasterization
+        with windows coordinates (x, y) only modifies the pixel in the
+        rendering surface at that location if it passes the pixel
+        ownership test defined by the native window system.
+
+        The pixel ownership test determines if the pixel at location
+        (x, y) in a rendering surface is currently owned by the client
+        api (more precisely, by this its context). If it is not, the
+        native window system decides the fate of the incoming
+        fragment. Possible results are that the fragment is discarded
+        or that some subset of the subsequent per-fragment operations
+        are applied to the fragment. This test allows the window
+        system to control the client api behavior, for instance, when
+        a window surface is obscured.
+
+        The pixel ownership test can only fail for window surfaces,
+        not for pixmap surfaces or pbuffer surfaces.
+
+        Most native window systems will be able to guarantee that no
+        fragment will ever fail the pixel ownership test, but a
+        notable exception to this is the X11 window system where,
+        depending on the driver, the pixel ownership test may fail
+        when portions of a window are obscured.
+
 Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
 
     Add the following to the table of "Queryable surface attributes
@@ -137,8 +168,7 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
               their age was previously greater than 0.
 
         For the purposes of buffer age tracking, a buffer's content
-        is considered defined when its age transitions to a value
-        greater than 0.
+        is considered defined when its age is a value greater than 0.
 
         For example, with a double buffered surface and an
         implementation that swaps via buffer exchanges, the age would
@@ -161,12 +191,12 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
         the pixel ownership test before and after the event that
         caused the reset.  In other words, applications can assume
         that no event will invalidate the content of pixels that
-        continuously pass the pixel test between when the buffer age
-        was queried and the following frame boundary.
+        continuously pass the pixel ownership test between when the
+        buffer age was queried and the following frame boundary.
 
         It is up to applications to track pixel ownership using data
-        collected from window configuration, expose, and any other
-        relevant X events.
+        collected from relevant window system events, such as
+        configuration and expose events on X11.
 
         If the EGL implementation decides to free un-used back-buffers
         when the system is under memory pressure or in response to
@@ -178,8 +208,8 @@ Additions to Section 3.5 of the EGL 1.4 Specification (Rendering Surfaces)
         recommended where possible though that the
         EGL_BUFFER_PRESERVED swap behaviour not be used since it can
         have severe performance consequences. Keeping track of the
-        buffer age instead and the regions that have changed over the
-        last 2 or 3 frames can often replace the need for using
+        buffer age and the regions that have changed over the last 2
+        or 3 frames instead can often replace the need for using
         EGL_BUFFER_PRESERVED.
 
         EGL_BUFFER_AGE_EXT state is a property of the EGL surface that
@@ -276,3 +306,6 @@ Revision History
     Version 9 20/09/2012
       - Update in line with changes made to the EGL_EXT_buffer age
         draft space
+    Version 10 29/11/2012
+      - Add pixel ownership test section and other minor
+        clarifications
