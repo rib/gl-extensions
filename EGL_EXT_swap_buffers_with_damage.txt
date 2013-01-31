@@ -8,7 +8,7 @@ Name Strings
 
 Notice
 
-    Copyright 2011 Intel Cooperation. All rights reserved.
+    Copyright 2011,2012 Intel Cooperation. All rights reserved.
 
 Contributors
 
@@ -45,7 +45,7 @@ Overview
     This extension provides a means to issue a swap buffers request to
     display the contents of the current back buffer and also specify a
     list of damage rectangles that can be passed to a system
-    compositor so it can minimize how it has to recompose.
+    compositor so it can minimize how much it has to recompose.
 
     This should be used in situations where an application is only
     animating a small portion of a surface since it enables the
@@ -79,7 +79,7 @@ Color Buffer)
 	    EGLint n_rects);
 
 	to do the same thing as eglSwapBuffers but additionally report
-	a list of rectangles that defines the region that has truly
+	a list of rectangles that define the region that has truly
 	changed since the last frame. To be clear; the entire contents
 	of the back buffer will still be swapped to the front so
 	applications using this API must still ensure that the entire
