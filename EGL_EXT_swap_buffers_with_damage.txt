@@ -8,7 +8,7 @@ Name Strings
 
 Notice
 
-    Copyright 2011,2012 Intel Cooperation. All rights reserved.
+    Copyright 2011,2012,2013 Intel Cooperation. All rights reserved.
 
 Contributors
 
@@ -27,7 +27,7 @@ Status
 
 Version
 
-    5 - Feb 11, 2012
+    6 - Feb 5, 2013
 
 Number
 
@@ -64,11 +64,10 @@ New Tokens
 
     None
 
-Additions to Section 3.9 of the EGL 1.4 Specification (Posting the
-Color Buffer)
+Changes to Chapter 3 of the EGL 1.4 Specification (EGL Functions and Errors)
 
-    Add the following text to the end of subsection 3.9.1 titled
-    "Posting to a Window"
+    Add the following text to subsection 3.9.1 titled "Posting to a
+    Window" after the description of eglSwapBuffers.
 
 	As an alternative to eglSwapBuffers use:
 
@@ -94,9 +93,72 @@ Color Buffer)
 	that rectangle. <n_rects> determines how many groups of 4
 	integers can be read from <rects>.  It is not necessary to
 	avoid overlaps of the specified rectangles.
-	    In addition to the error conditions checked for by the
-	eglSwapBuffers api an EGL_BAD_PARAMETER error is generated if
-	<rects> is NULL or <n_rects> is less than or equal to 0.
+            If <n_rects> is 0 then <rects> is ignored and the entire
+        surface is implicitly damaged and the behaviour is equivalent
+        to calling eglSwapBuffers.
+            The error conditions checked for are the same as for the
+        eglSwapBuffers api.
+
+    Modify the first paragraph of Section 3.9.1 titled "Native Window
+    Resizing"
+    
+        "If the native window corresponding to <surface> has been
+        resized prior to the swap, <surface> must be resized to match.
+        <surface> will normally be resized by the EGL implementation
+        at the time the native window is resized. If the
+        implementation cannot do this transparently to the client,
+        then eglSwapBuffers and eglSwapBuffersWithDamageEXT must
+        detect the change and resize surface prior to copying its
+        pixels to the native window."
+
+    Modify the following sentences in Section 3.9.3, page 51 (Posting
+    Semantics)
+
+    Paragraph 2, first sentence:
+
+        "If <dpy> and <surface> are the display and surface for the
+        calling thread's current context, eglSwapBuffers,
+        eglSwapBuffersWithDamageEXT, and eglCopyBuffers perform an
+        implicit flush operation on the context (glFlush for OpenGL or
+        OpenGL ES context, vgFlush for an OpenVG context)."
+
+    Paragraph 3, first sentence:
+
+        "The destination of a posting operation (a visible window, for
+        eglSwapBuffers or eglSwapBuffersWithDamageEXT, or a native
+        pixmap, for eglCopyBuffers) should have the same number of
+        components and component sizes as the color buffer it's being
+        copied from."
+
+    Paragraph 6, first two sentences:
+
+        "The function
+
+            EGLBoolean eglSwapInterval(EGLDisplay dpy, EGLint
+                interval);
+
+        specifies the minimum number of video frame periods per color
+        buffer post operation for the window associated with the
+        current context. The interval takes effect when eglSwapBuffers
+        or eglSwapBuffersWithDamageEXT is first called subsequent to
+        the eglSwapInterval call."
+
+    Modify the following sentences in Section 3.9.4, page 52 (Posting
+    Errors)
+
+    Paragraph 1, first sentence:
+
+        "eglSwapBuffers, eglSwapBuffersWithDamageEXT, and
+        eglCopyBuffers return EGL_FALSE on failure."
+
+    Paragraph 1, seventh sentence:
+
+        "If eglSwapBuffers or eglSwapBuffersWithDamageEXT are called
+        and the native window associated with <surface> is no longer
+        valid, an EGL_BAD_NATIVE_WINDOW error is generated.  If
+        eglSwapBuffersWithDamageEXT is called and <n_rects>, is less
+        than zero or <n_rects> is greater than zero but <rects> is
+        NULL, EGL_BAD_PARAMETER is generated."
 
 Dependencies on OpenGL ES
 
@@ -139,3 +201,8 @@ Revision History
 	compliant.
     Version 5, 11,02,2012
       - Tweak the cases where we report BAD_PARAMETER errors
+    Version 6, 05/02/2013
+      - Specify more thorough updates across the EGL 1.4 spec
+        wherever it relates to the eglSwapBuffers api
+      - Clarify that passing <n_rects> of 0 behaves as if
+        eglSwapBuffers were called.
