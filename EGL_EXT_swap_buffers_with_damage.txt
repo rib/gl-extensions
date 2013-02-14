@@ -27,7 +27,7 @@ Status
 
 Version
 
-    6 - Feb 5, 2013
+    7 - Feb 14, 2013
 
 Number
 
@@ -88,9 +88,9 @@ Changes to Chapter 3 of the EGL 1.4 Specification (EGL Functions and Errors)
 	    <rects> points to a list of integers in groups of four that
 	each describe a rectangle in screen coordinates in this
 	layout: {x, y, width, height}. The rectangles are specified
-	relative to the top-left of the surface and the x and y
-	components of each rectangle specify the top-left position of
-	that rectangle. <n_rects> determines how many groups of 4
+	relative to the bottom-left of the surface and the x and y
+	components of each rectangle specify the bottom-left position
+        of that rectangle. <n_rects> determines how many groups of 4
 	integers can be read from <rects>.  It is not necessary to
 	avoid overlaps of the specified rectangles.
             If <n_rects> is 0 then <rects> is ignored and the entire
@@ -206,3 +206,5 @@ Revision History
         wherever it relates to the eglSwapBuffers api
       - Clarify that passing <n_rects> of 0 behaves as if
         eglSwapBuffers were called.
+    Version 7, 14/02/2013
+      - Specify that a bottom-left origin should be used for rectangles
